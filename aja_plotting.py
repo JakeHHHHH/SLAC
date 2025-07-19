@@ -1,10 +1,14 @@
 import pandas as pd
+import matplotlib.pyplot as plt
+import ipywidgets as pw
 import numpy
 import os
 
 
 
 class AJA_df(pd.DataFrame):
+
+    #Variables Used at the SLAC AJA Sputterer
 
     variables = [
         "Date", "Time", "Layer #", "Sub. Rot.", "Sub. Rot. Speed", "Sub. Z Height", "C.M. Press.", "VAT Press Mode",
@@ -20,7 +24,7 @@ class AJA_df(pd.DataFrame):
         "DC#5 Shutter", "DC#5 TGT", "DC#5 KWH", "DC#5 STPT", "DC#5 MODE"
     ]
 
-
+    # Change at disgression
     plasma_dict = {
         "RF#1 Shutter": "AL",
         "RF#2 Shutter": "Hf",
@@ -30,13 +34,14 @@ class AJA_df(pd.DataFrame):
         "DC#5 Shutter": "Ta"
     }
 
+
+
     def __init__(self, file_path, /, color_palette = []):
-        super().__init__()
         self.path = file_path
         self.target_folder, self.sample_name = "\\".join(file_path.split("\\")[:-1]), file_path.split("\\")[-1].split(".")[0]
         self.df = pd.read_csv(file_path, skiprows=1)
-        if len(color_palette) == 0:
-            color_palette = ['dodgerblue','mediumseagreen','goldenrod','indianred','slateblue','tomato','orchid','darkcyan',
+        if color_palette:
+            color_palette = ['dodgerblue','mediumseagreen','goldenrod','indianred','slateblue','tomato','orchi+d','darkcyan',
                              'rosybrown','steelblue','coral','darkorange','limegreen',
                             'sienna','mediumvioletred','peru','teal','cadetblue','palevioletred','darkkhaki']
         self.color_palette = color_palette
@@ -78,7 +83,7 @@ class AJA_df(pd.DataFrame):
                 start = i
                 end = start
                 current_layer += 1
-            elif i == len(self['Time']) -1:
+            elif i == len(self.df['Time']) -1:
                 layer_ranges.append((start, end))
             else:
                 end += 1 
@@ -99,6 +104,7 @@ class AJA_df(pd.DataFrame):
         Returns a tuple of conting the name of the plasama and how long it was on for
         with an uncertainty determine by the tume increment
         """
+
         layer_ranges = self.get_layer_range()
         layer_names = self.get_layer_names()
         plasma_layers_tuple = [(layer_names[i],layer_ranges[i]) for i in range(len(layer_names)) if layer_names[i].contains("nm")]
@@ -112,33 +118,40 @@ class AJA_df(pd.DataFrame):
                     if i == "ON":
                         time_interval += 1
             plasma_times.append( AJA_df.plasma_dict[plasma_layer], time_interval * self.get_time_increment())
-            
-
-
-
-    def get_plasma_range(self) -> list:
+        return plasma_times
+    
+    def get_relative_time_column(self):
         """
-        Returns a list of tuples containing the start and end times of each plasma layer.
+        Returns a column of relative time in seconds
         """
+        date_time_column = pd.to_datetime(self.df['Time'], format='%I:%M:%S %p')
+        relative_time = (date_time_column - date_time_column.iloc[0]).dt.total_seconds()
+        return relative_time
+    
 
+class AJA_plot():
+    preset = {
+        "None" : None,
+        "Temp vs. Time" : None,
+        "Temp vs. Time with Layers": None,
+        "Temp & STPT vs. Time": None,
+        "Temp & STPT vs. Time with Layers": None,
+        "Pressure vs. Time": None,
+        "Pressure vs. Time with Layers": None,
+        "Material vs. Time": None,
+        "Material vs. Time with Layers":None,
+    }
 
-        shutter_names = [f"DC#{i} Shutter" for i in range(1, 5)]
+    def __init__(self, aja_df: AJA_df, preset = "None"):
+        pass
 
-        layer_ranges = self.get_layer_range("")
-        plasma_ranges = []
-        for start, end in layer_ranges:
-            if start < end:
-                plasma_ranges.append((self.df['Time'][start], self.df['Time'][end]))
-            else:
-                plasma_ranges.append((None, None))
-        return plasma_ranges
 
 
 if __name__ == "__main__":
-    df = AJA_df(r"20250714_XRR04_S055_30C_3nm Ta_600C_97_nm_Ta_TaOx_14-Jul-25_ 4_55_14 PM.csv")
+    df = AJA_df(r"sample_folder\datalogs\20250714_XRR04_S055_30C_3nm Ta_600C_97_nm_Ta_TaOx_14-Jul-25_ 4_55_14 PM.csv")
     print(df.get_layer_num())
-    print(df.get_layer_names())
-    print(df.get_layer_range())
+    #print(df.get_layer_names())
+    #print(df.get_layer_range())
     print(df.get_time_increment())
     print(df.get_plasma_times())
     print(df.get_plasma_range())
