@@ -148,10 +148,10 @@ class AJA_plot():
 
 
 if __name__ == "__main__":
-    df = AJA_df(r"sample_folder\datalogs\20250714_XRR04_S055_30C_3nm Ta_600C_97_nm_Ta_TaOx_14-Jul-25_ 4_55_14 PM.csv")
+    df = AJA_df(r"sample_folder\Datalog\20250714_XRR04_S055_30C_3nm Ta_600C_97_nm_Ta_TaOx_14-Jul-25_ 4_55_14 PM.csv")
     print(df.get_layer_num())
-    #print(df.get_layer_names())
-    #print(df.get_layer_range())
+    print(df.get_layer_names())
+    print(df.get_layer_range())
     print(df.get_time_increment())
     print(df.get_plasma_times())
     print(df.get_plasma_range())
